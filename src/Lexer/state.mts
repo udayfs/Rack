@@ -24,7 +24,6 @@ export const State = {
   percent: 22,
   mult_line_strlit_line: 23,
   str_lit_backslash: 24,
-  char_lit_end: 25,
   char_lit_backslash: 26,
   int_lit_bin_nounder: 27,
   int_lit_oct_nounder: 28,

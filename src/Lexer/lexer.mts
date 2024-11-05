@@ -21,7 +21,7 @@ export class Lexer {
   }
 
   public constructor(rawBytes: string) {
-    this.Buffer = Array.from(rawBytes);
+    this.Buffer = rawBytes.split("");
   }
 
   public next(): token {
@@ -47,11 +47,17 @@ export class Lexer {
             }
             case "'": {
               s = State.char_lit;
+              res._tag = Tag.CHARLIT;
               break;
             }
             case "@": {
               s = State.saw_at_sign;
               break;
+            }
+            case ",": {
+              res._tag = Tag.COMMA;
+              this.index += 1;
+              break loop;
             }
             case "=": {
               s = State.equal;
@@ -307,19 +313,23 @@ export class Lexer {
         case (State.char_lit):
           switch (c) {
             case "'": {
-              res._tag = Tag.INVALID;
+              this.index += 1;
               break loop;
             }
             case "\\": {
               s = State.char_lit_backslash;
               break;
             }
+            case "\n": {
+              res._tag = Tag.INVALID;
+              break loop;
+            }
             default: {
               if (ControlCode.includes(c)) {
                 res._tag = Tag.INVALID;
                 break loop;
               } else {
-                s = State.char_lit_end;
+                s = State.char_lit;
                 break;
               }
             }
@@ -333,24 +343,15 @@ export class Lexer {
               break loop;
             }
             default: {
-              s = State.char_lit_end;
+              if (ControlCode.includes(c)) {
+                res._tag = Tag.INVALID;
+                break loop;
+              }
+              s = State.char_lit;
               break;
             }
           }
           break;
-
-        case (State.char_lit_end):
-          switch (c) {
-            case "'": {
-              res._tag = Tag.CHARLIT;
-              this.index += 1;
-              break loop;
-            }
-            default: {
-              res._tag = Tag.INVALID;
-              break loop;
-            }
-          }
 
           /* falls through */
         case (State.mult_line_strlit_line):
@@ -745,7 +746,8 @@ export class Lexer {
       this.index += 1;
     }
 
-    if (res._tag != Tag.EOF) {
+    if (res._tag === Tag.INVALID) this.index = this.Buffer.length;
+    else if (res._tag !== Tag.EOF) {
       const _keyword = this.getKeyword(
         this.Buffer.slice(res._loc._from, this.index).join(""),
       );

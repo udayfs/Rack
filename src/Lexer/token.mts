@@ -27,6 +27,7 @@ export const Tag = {
   BOR: "|",
   BOR_EQ: "|=",
   AT: "@",
+  COMMA: ",",
   PERCENT: "%",
   LPAREN: "(",
   RPAREN: ")",

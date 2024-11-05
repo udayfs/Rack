@@ -3,7 +3,7 @@ import { assertEquals } from "jsr:@std/assert";
 import { Keyword, Tag, type tag } from "./token.mts";
 import { Lexer } from "./lexer.mts";
 
-function testLexer(source: string, expectedTags: tag[]) {
+function testLexer(source: string, expectedTags: tag[]): void {
     const l = new Lexer(source);
     expectedTags.forEach((tag) => {
         const token = l.next();
@@ -57,6 +57,48 @@ Deno.test("Test Hexadecimal Integer Notation With Underscores", () => {
     ]);
 });
 
-Deno.test("Test Char", () => {
+Deno.test("Test Identifier and BuiltIn func", () => {
+    testLexer(
+        'set W = @at(\"Hello, World\", 7)',
+        [
+            Keyword[27],
+            Tag.IDENT,
+            Tag.ASSIGN,
+            Tag.BUILTIN,
+            Tag.LPAREN,
+            Tag.STRLIT,
+            Tag.COMMA,
+            Tag.INTLIT,
+            Tag.RPAREN,
+        ] as tag[],
+    );
+});
+
+Deno.test("Test Character Literal", () => {
     testLexer("'c'", [Tag.CHARLIT]);
+});
+
+Deno.test("Test NewLine in Character Literal", () => {
+    testLexer(
+        `'
+        '`,
+        [Tag.INVALID],
+    );
+});
+
+Deno.test("Test NewLine in String Literal", () => {
+    testLexer(
+        `"
+        "`,
+        [Tag.INVALID],
+    );
+});
+
+Deno.test("Unicode Code Point Character Literal", () => {
+    testLexer(`'😹'`, [Tag.CHARLIT]);
+});
+
+Deno.test("Unicode Escape in Character Literal", () => {
+    testLexer("'\u019d'", [Tag.CHARLIT]);
+    testLexer("'\u20BC'", [Tag.CHARLIT]);
 });
