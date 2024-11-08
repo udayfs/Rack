@@ -42,11 +42,19 @@ export class Lexer {
           switch (c) {
             case '"': {
               s = State.str_lit;
+              if (this.index === this.Buffer.length - 1) {
+                res._tag = Tag.INVALID;
+                break loop;
+              }
               res._tag = Tag.STRLIT;
               break;
             }
             case "'": {
               s = State.char_lit;
+              if (this.index === this.Buffer.length - 1) {
+                res._tag = Tag.INVALID;
+                break loop;
+              }
               res._tag = Tag.CHARLIT;
               break;
             }
@@ -166,9 +174,7 @@ export class Lexer {
                 res._tag = Tag.INTLIT;
               } else {
                 res._tag = Tag.INVALID;
-                res._loc._to = this.index;
-                this.index += 1;
-                return res;
+                break loop;
               }
             }
           }
@@ -325,13 +331,14 @@ export class Lexer {
               break loop;
             }
             default: {
-              if (ControlCode.includes(c)) {
+              if (
+                ControlCode.includes(c) || this.index === this.Buffer.length - 1
+              ) {
                 res._tag = Tag.INVALID;
                 break loop;
-              } else {
-                s = State.char_lit;
-                break;
               }
+              s = State.char_lit;
+              break;
             }
           }
           break;
@@ -343,7 +350,9 @@ export class Lexer {
               break loop;
             }
             default: {
-              if (ControlCode.includes(c)) {
+              if (
+                ControlCode.includes(c) || this.index === this.Buffer.length - 1
+              ) {
                 res._tag = Tag.INVALID;
                 break loop;
               }
