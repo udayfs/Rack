@@ -80,83 +80,17 @@ export const Keyword = [
   "set",
 ] as string[];
 
-export const Nums = Array.from("123456789");
-export const Alpha = Array.from(
-  "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
-);
+export const DecDigit = /[0-9]/;
+export const BinDigit = /[01]/;
+export const HexDigit = /[0-9A-Fa-f]/;
+export const OctDigit = /[0-7]/;
+// deno-lint-ignore no-control-regex
+export const CntlDigit = /[\x00-\x1F\x7F]/;
 
-// https://jkorpela.fi/chars/spaces.html
-export const WhiteSpace = [
-  "\u0009",
-  "\u000a",
-  "\u000b",
-  "\u000c",
-  "\u000d",
-  "\u0020",
-  "\u0085",
-  "\u00a0",
-  "\u1680",
-  "\u180e",
-  "\u2000",
-  "\u2001",
-  "\u2002",
-  "\u2003",
-  "\u2004",
-  "\u2005",
-  "\u2006",
-  "\u2007",
-  "\u2008",
-  "\u2009",
-  "\u200a",
-  "\u200b",
-  "\u200c",
-  "\u200d",
-  "\u200e",
-  "\u200f",
-  "\u2028",
-  "\u2029",
-  "\u202f",
-  "\u205f",
-  "\u3000",
-  "\ufeff",
-] as string[];
-
-export const ControlCode = [
-  "\u0001",
-  "\u0002",
-  "\u0003",
-  "\u0004",
-  "\u0005",
-  "\u0006",
-  "\u0007",
-  "\u0008",
-  "\u0009",
-  "\u000B",
-  "\u000C",
-  "\u000D",
-  "\u000E",
-  "\u000F",
-  "\u0010",
-  "\u0011",
-  "\u0012",
-  "\u0013",
-  "\u0014",
-  "\u0015",
-  "\u0016",
-  "\u0017",
-  "\u0018",
-  "\u0019",
-  "\u001A",
-  "\u001B",
-  "\u001C",
-  "\u001D",
-  "\u001E",
-  "\u001F",
-  "\u007F",
-] as string[];
+export const Space = /\s/;
+export const Alpha = /[A-Za-z_]/;
 
 export type tag = (typeof Tag)[keyof typeof Tag];
-
 export type token = {
   _tag: tag;
   _loc: loc;

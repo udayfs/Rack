@@ -1,10 +1,13 @@
 import {
   Alpha,
-  ControlCode,
+  BinDigit,
+  CntlDigit,
+  DecDigit,
+  HexDigit,
   Keyword,
-  Nums,
+  OctDigit,
+  Space,
   Tag,
-  WhiteSpace,
 } from "./token.mts";
 import { State } from "./state.mts";
 
@@ -35,7 +38,7 @@ export class Lexer {
     };
     let s: state = State.start;
     let c;
-    loop: while (true && this.index < this.Buffer.length) {
+    loop: while (this.index < this.Buffer.length) {
       c = this.Buffer[this.index];
       switch (s) {
         case (State.start):
@@ -163,13 +166,13 @@ export class Lexer {
               break;
             }
             default: {
-              if (WhiteSpace.includes(c)) {
+              if (Space.test(c)) {
                 res._loc._from += 1;
                 if (c === "\n") res._loc._lineno += 1;
-              } else if (Alpha.includes(c)) {
+              } else if (Alpha.test(c)) {
                 s = State.ident;
                 res._tag = Tag.IDENT;
-              } else if (Nums.includes(c)) {
+              } else if (DecDigit.test(c)) {
                 s = State.int_lit_dec;
                 res._tag = Tag.INTLIT;
               } else {
@@ -183,7 +186,7 @@ export class Lexer {
         case (State.saw_at_sign):
           switch (c) {
             default: {
-              if (Alpha.includes(c)) {
+              if (Alpha.test(c)) {
                 s = State.builtin;
                 res._tag = Tag.BUILTIN;
               } else {
@@ -245,7 +248,7 @@ export class Lexer {
         case (State.ident):
           switch (c) {
             default: {
-              if (Alpha.includes(c) || Nums.includes(c) || c === "0") break;
+              if (Alpha.test(c) || DecDigit.test(c)) break;
               else {
                 const _keyword = this.getKeyword(
                   this.Buffer.slice(res._loc._from, this.index).join(""),
@@ -260,7 +263,7 @@ export class Lexer {
         case (State.builtin):
           switch (c) {
             default: {
-              if (Alpha.includes(c) || Nums.includes(c) || c === "0") break;
+              if (Alpha.test(c) || DecDigit.test(c)) break;
               else break loop;
             }
           }
@@ -294,7 +297,7 @@ export class Lexer {
               break loop;
             }
             default: {
-              if (ControlCode.includes(c)) {
+              if (CntlDigit.test(c)) {
                 res._tag = Tag.INVALID;
                 break loop;
               }
@@ -332,7 +335,7 @@ export class Lexer {
             }
             default: {
               if (
-                ControlCode.includes(c) || this.index === this.Buffer.length - 1
+                CntlDigit.test(c) || this.index === this.Buffer.length - 1
               ) {
                 res._tag = Tag.INVALID;
                 break loop;
@@ -351,7 +354,7 @@ export class Lexer {
             }
             default: {
               if (
-                ControlCode.includes(c) || this.index === this.Buffer.length - 1
+                CntlDigit.test(c) || this.index === this.Buffer.length - 1
               ) {
                 res._tag = Tag.INVALID;
                 break loop;
@@ -377,10 +380,7 @@ export class Lexer {
               break;
             }
             default: {
-              if (
-                ControlCode.slice(0, 11).includes(c) ||
-                ControlCode.includes(c, 12)
-              ) {
+              if (CntlDigit.test(c)) {
                 res._tag = Tag.INVALID;
                 break loop;
               } else break;
@@ -495,13 +495,13 @@ export class Lexer {
             }
             default: {
               if (
-                c === "0" || Nums.includes(c) || c === "_" || c === "." ||
+                DecDigit.test(c) || c === "_" || c === "." ||
                 c === "e" || c === "E"
               ) {
                 this.index -= 1;
                 s = State.int_lit_dec;
                 break;
-              } else if (Alpha.includes(c)) {
+              } else if (Alpha.test(c)) {
                 res._tag = Tag.INVALID;
                 break loop;
               } else break loop;
@@ -512,7 +512,7 @@ export class Lexer {
         case (State.int_lit_bin_nounder):
           switch (c) {
             default: {
-              if (c === "0" || c === "1") {
+              if (BinDigit.test(c)) {
                 s = State.int_lit_bin;
                 break;
               } else {
@@ -530,8 +530,8 @@ export class Lexer {
               break;
             }
             default: {
-              if (c === "0" || c === "1") break;
-              else if (Nums.includes(c, 1) || Alpha.includes(c, 1)) {
+              if (BinDigit.test(c)) break;
+              else if (Alpha.test(c)) {
                 res._tag = Tag.INVALID;
                 break loop;
               } else break loop;
@@ -542,7 +542,7 @@ export class Lexer {
         case (State.int_lit_oct_nounder):
           switch (c) {
             default: {
-              if (Nums.slice(0, 7).includes(c) || c === "0") {
+              if (OctDigit.test(c)) {
                 s = State.int_lit_oct;
                 break;
               } else {
@@ -560,8 +560,8 @@ export class Lexer {
               break;
             }
             default: {
-              if ((Nums.slice(0, 7).includes(c)) || c === "0") break;
-              else if (c === "8" || c === "9" || Alpha.includes(c, 1)) {
+              if (OctDigit.test(c)) break;
+              else if (Alpha.test(c)) {
                 res._tag = Tag.INVALID;
                 break loop;
               } else break loop;
@@ -572,10 +572,7 @@ export class Lexer {
         case (State.int_lit_hex_nounder):
           switch (c) {
             default: {
-              if (
-                Nums.includes(c) || c === "0" ||
-                Alpha.slice(1, 7).includes(c) || Alpha.slice(27, 33).includes(c)
-              ) {
+              if (HexDigit.test(c)) {
                 s = State.int_lit_hex;
                 break;
               } else {
@@ -593,17 +590,10 @@ export class Lexer {
               break;
             }
             default: {
-              if (
-                Nums.includes(c) || c === "0" ||
-                Alpha.slice(1, 7).includes(c) ||
-                Alpha.slice(27, 33).includes(c)
-              ) break;
-              else if (
-                Alpha.slice(7, 27).includes(c) ||
-                Alpha.slice(33, 53).includes(c)
-              ) {
+              if (HexDigit.test(c)) break;
+              else if (Alpha.test(c)) {
                 res._tag = Tag.INVALID;
-                break;
+                break loop;
               } else break loop;
             }
           }
@@ -624,13 +614,8 @@ export class Lexer {
                 s = State.float_exponent_usize;
                 res._tag = Tag.FLOATLIT;
                 break;
-              } else if (Nums.includes(c) || c === "0") break;
-              else if (
-                Alpha.slice(1, 5).includes(c) ||
-                Alpha.slice(27, 31).includes(c) ||
-                Alpha.slice(7, 27).includes(c) ||
-                Alpha.slice(33, 53).includes(c)
-              ) {
+              } else if (DecDigit.test(c)) break;
+              else if (Alpha.test(c)) {
                 res._tag = Tag.INVALID;
                 break loop;
               } else break loop;
@@ -641,7 +626,7 @@ export class Lexer {
         case (State.int_lit_dec_nounder):
           switch (c) {
             default: {
-              if (Nums.includes(c) || c === "0") {
+              if (DecDigit.test(c)) {
                 s = State.int_lit_dec;
                 break;
               } else {
@@ -655,11 +640,11 @@ export class Lexer {
         case (State.num_dot_dec):
           switch (c) {
             default: {
-              if (Nums.includes(c) || c === "0") {
+              if (DecDigit.test(c)) {
                 res._tag = Tag.FLOATLIT;
                 s = State.float_lit;
                 break;
-              } else if (Alpha.includes(c)) {
+              } else if (Alpha.test(c)) {
                 res._tag = Tag.INVALID;
                 break loop;
               } else break loop;
@@ -679,13 +664,8 @@ export class Lexer {
               break;
             }
             default: {
-              if (Nums.includes(c) || c === "0") break;
-              else if (
-                Alpha.slice(1, 5).includes(c) ||
-                Alpha.slice(7, 27).includes(c) ||
-                Alpha.slice(27, 31).includes(c) ||
-                Alpha.slice(33, 53).includes(c)
-              ) {
+              if (DecDigit.test(c)) break;
+              else if (Alpha.test(c)) {
                 res._tag = Tag.INVALID;
                 break loop;
               } else break loop;
@@ -696,7 +676,7 @@ export class Lexer {
         case (State.float_lit_nounder):
           switch (c) {
             default: {
-              if (Nums.includes(c) || c === "0") {
+              if (DecDigit.test(c)) {
                 s = State.float_lit;
                 break;
               } else {
@@ -725,7 +705,7 @@ export class Lexer {
         case (State.float_exponent_num_nounder):
           switch (c) {
             default: {
-              if (Nums.includes(c) || c === "0") {
+              if (DecDigit.test(c)) {
                 s = State.float_exponent_num;
                 break;
               } else {
@@ -743,8 +723,8 @@ export class Lexer {
               break;
             }
             default: {
-              if (Nums.includes(c) || c === "0") break;
-              else if (Alpha.includes(c, 1)) {
+              if (DecDigit.test(c)) break;
+              else if (Alpha.test(c)) {
                 res._tag = Tag.INVALID;
                 break loop;
               } else break loop;
